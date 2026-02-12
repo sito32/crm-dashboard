@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { useStore } from './store/useStore';
 import { Sidebar } from './components/Layout/Sidebar';
@@ -9,25 +9,26 @@ import { ClientsPage } from './components/Clients/ClientsPage';
 import { AIMessageBuilder } from './components/AIBuilder/AIMessageBuilder';
 import { SettingsPage } from './components/Settings/SettingsPage';
 import { LandingPage } from './components/Landing/LandingPage';
-import { AuthPage } from './components/Auth/AuthPage';
 
 export function App() {
-  const { isAuthenticated, currentView, sidebarOpen, toggleSidebar } = useStore();
+  const { currentView, sidebarOpen, toggleSidebar } = useStore();
   const [showLanding, setShowLanding] = useState(false);
 
-  // Check for landing page route
+  // Handle landing page route
   if (typeof window !== 'undefined' && window.location.hash === '#landing') {
     return <LandingPage />;
   }
 
-  // Toggle landing page with keyboard shortcut
-  if (typeof window !== 'undefined') {
-    window.addEventListener('keydown', (e) => {
+  // Keyboard shortcut (Ctrl + L)
+  useEffect(() => {
+    const handler = (e) => {
       if (e.ctrlKey && e.key === 'l') {
-        setShowLanding(!showLanding);
+        setShowLanding((prev) => !prev);
       }
-    });
-  }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   if (showLanding) {
     return (
@@ -41,11 +42,6 @@ export function App() {
         <LandingPage />
       </div>
     );
-  }
-
-  // Show auth page if not authenticated
-  if (!isAuthenticated) {
-    return <AuthPage />;
   }
 
   const renderContent = () => {
@@ -89,11 +85,9 @@ export function App() {
           },
         }}
       />
-      
-      {/* Sidebar */}
+
       <Sidebar isOpen={sidebarOpen} onClose={toggleSidebar} />
 
-      {/* Main Content */}
       <div
         className={`transition-all duration-300 ${
           sidebarOpen ? 'lg:ml-72' : 'ml-0'
